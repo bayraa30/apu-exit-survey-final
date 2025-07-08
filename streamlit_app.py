@@ -242,6 +242,8 @@ elif st.session_state.page == 1:
     page_1()
 elif st.session_state.page == 2:
     page_2()
+elif st.session_state.page == 3:
+    page_3()
 elif st.session_state.page == 999:
     page_999()
 else:
