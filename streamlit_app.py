@@ -1,20 +1,18 @@
 import streamlit as st
 from snowflake.snowpark import Session
-def get_session():
-    return Session.builder.getOrCreate()
+from datetime import datetime
 
-# ---- CONFIGURATION ----
+# ---- CONFIG ----
 COMPANY_NAME = "АПУ ХХК"
 SCHEMA_NAME = "APU"
 EMPLOYEE_TABLE = "APU_EMP_DATA"
+ANSWER_TABLE = f"{SCHEMA_NAME}_SURVEY_ANSWERS"
+DATABASE_NAME = "CDNA_HR_DATA"
 LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
 
-# --- Snowflake credentials (replace with your actual or use Streamlit secrets) ---
-SNOWFLAKE_USER = "YOUR_USER"
-SNOWFLAKE_PASSWORD = "YOUR_PASSWORD"
-SNOWFLAKE_ACCOUNT = "YOUR_ACCOUNT"
-SNOWFLAKE_WAREHOUSE = "YOUR_WAREHOUSE"
-SNOWFLAKE_DATABASE = "CDNA_HR_DATA"
+# ---- Secure session ----
+def get_session():
+    return Session.builder.configs(st.secrets["connections.snowflake"]).create()
 
 # ---- Answer storing ----
 import json
