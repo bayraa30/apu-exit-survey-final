@@ -1,9 +1,6 @@
 import streamlit as st
 from snowflake.snowpark import Session
 from datetime import datetime
-st.write("Secrets loaded:", st.secrets.keys())
-st.write("Snowflake secret:", st.secrets["connections"])
-
 
 # ---- CONFIG ----
 COMPANY_NAME = "АПУ ХХК"
@@ -18,9 +15,6 @@ def get_session():
     return Session.builder.configs(st.secrets["connections"]).create()
 
 # ---- Answer storing ----
-import json
-from datetime import datetime
-
 def submit_answers():
     emp_code = st.session_state.get("confirmed_empcode")
     first_name = st.session_state.get("confirmed_firstname")
@@ -30,86 +24,38 @@ def submit_answers():
     submitted_at = datetime.utcnow()
     a = st.session_state.answers
 
-    print("🚀 DEBUG: Submitting empcode and firstname:", emp_code, first_name)
-
     values = [
-        emp_code,
-        first_name,
-        survey_type,
-        submitted_at,
-        a.get("Reason_for_Leaving", ""),
-        a.get("Alignment_with_Daily_Tasks", ""),
-        a.get("Unexpected_Responsibilities", ""),
-        a.get("Onboarding_Effectiveness", ""),
-        a.get("Company_Culture", ""),
-        a.get("Atmosphere", ""),
-        a.get("Conflict_Resolution", ""),
-        a.get("Feedback", ""),
-        a.get("Leadership_Style", ""),
-        a.get("Team_Collaboration", ""),
-        a.get("Team_Support", ""),
-        a.get("Motivation", ""),
-        a.get("Motivation_Other", ""),
-        a.get("Engagement", ""),
-        a.get("Engagement_Other", ""),
-        a.get("Well_being", ""),
-        a.get("Performance_Compensation", ""),
-        a.get("Value_of_Benefits", ""),
-        a.get("KPI_Accuracy", ""),
-        a.get("Career_Growth", ""),
-        a.get("Traning_Quality", ""),
-        a.get("Loyalty1", ""),
-        a.get("Loyalty1_Other", ""),
-        a.get("Loyalty2", ""),
-        a.get("Loyalty2_Other", "")
+        emp_code, first_name, survey_type, submitted_at,
+        a.get("Reason_for_Leaving", ""), a.get("Alignment_with_Daily_Tasks", ""),
+        a.get("Unexpected_Responsibilities", ""), a.get("Onboarding_Effectiveness", ""),
+        a.get("Company_Culture", ""), a.get("Atmosphere", ""), a.get("Conflict_Resolution", ""),
+        a.get("Feedback", ""), a.get("Leadership_Style", ""), a.get("Team_Collaboration", ""),
+        a.get("Team_Support", ""), a.get("Motivation", ""), a.get("Motivation_Other", ""),
+        a.get("Engagement", ""), a.get("Engagement_Other", ""), a.get("Well_being", ""),
+        a.get("Performance_Compensation", ""), a.get("Value_of_Benefits", ""), a.get("KPI_Accuracy", ""),
+        a.get("Career_Growth", ""), a.get("Traning_Quality", ""), a.get("Loyalty1", ""),
+        a.get("Loyalty1_Other", ""), a.get("Loyalty2", ""), a.get("Loyalty2_Other", "")
     ]
 
     try:
         session = get_session()
-
         escaped_values = ["'{}'".format(str(v).replace("'", "''")) if v is not None else "''" for v in values]
-
         insert_query = f"""
             INSERT INTO {table} (
                 EMPCODE, FIRSTNAME, SURVEY_TYPE, SUBMITTED_AT,
-                Reason_for_Leaving,
-                Alignment_with_Daily_Tasks,
-                Unexpected_Responsibilities,
-                Onboarding_Effectiveness,
-                Company_Culture,
-                Atmosphere,
-                Conflict_Resolution,
-                Feedback,
-                Leadership_Style,
-                Team_Collaboration,
-                Team_Support,
-                Motivation,
-                Motivation_Other,
-                Engagement,
-                Engagement_Other,
-                Well_being,
-                Performance_Compensation,
-                Value_of_Benefits,
-                KPI_Accuracy,
-                Career_Growth,
-                Traning_Quality,
-                Loyalty1,
-                Loyalty1_Other,
-                Loyalty2,
-                Loyalty2_Other
-            )
-            VALUES ({','.join(escaped_values)})
+                Reason_for_Leaving, Alignment_with_Daily_Tasks, Unexpected_Responsibilities,
+                Onboarding_Effectiveness, Company_Culture, Atmosphere, Conflict_Resolution,
+                Feedback, Leadership_Style, Team_Collaboration, Team_Support,
+                Motivation, Motivation_Other, Engagement, Engagement_Other, Well_being,
+                Performance_Compensation, Value_of_Benefits, KPI_Accuracy, Career_Growth,
+                Traning_Quality, Loyalty1, Loyalty1_Other, Loyalty2, Loyalty2_Other
+            ) VALUES ({','.join(escaped_values)})
         """
-
         session.sql(insert_query).collect()
         return True
-
     except Exception as e:
         st.error(f"❌ Failed to submit answers: {e}")
         return False
-
-
-
 
 # ---- Survey types per category ----
 survey_types = {
@@ -123,6 +69,7 @@ survey_types = {
 # ---- PAGE SETUP ----
 st.set_page_config(page_title=f"{COMPANY_NAME} Судалгаа", layout="wide")
 
+# ---- UTILS ----
 def logo():
     st.image(LOGO_URL, width=210)
 
@@ -135,136 +82,56 @@ def progress_chart():
         "4-10 жил": 19,
         "11 болон түүнээс дээш": 19
     }
-
     if st.session_state.page < 3:
-        return  # Skip showing progress before Q1 starts
-
+        return
     current_page = st.session_state.page
     total = total_questions_by_type.get(st.session_state.survey_type, 19)
-    question_index = max(1, current_page - 3 + 1)  # Never below 1
-    progress = min(100, max(0, int((question_index / total) * 100)))  # Clamp between 0–100
-
+    question_index = max(1, current_page - 3 + 1)
+    progress = min(100, max(0, int((question_index / total) * 100)))
     st.markdown(f"#### Асуулт {question_index} / {total}")
     st.progress(progress)
 
-
-
-# ---- STATE INIT ----
-if "category_selected" not in st.session_state:
-    st.session_state.category_selected = None
-if "survey_type" not in st.session_state:
-    st.session_state.survey_type = None
-if "page" not in st.session_state:
-    st.session_state.page = 0
-if "emp_confirmed" not in st.session_state:
-    st.session_state.emp_confirmed = None
-if "answers" not in st.session_state:
-    st.session_state.answers = {}
-
-# ---- HANDLERS ----
-def set_category(category):
-    st.session_state.category_selected = category
-    st.session_state.survey_type = None
-
-def set_survey_type(survey):
-    st.session_state.survey_type = survey
-    st.session_state.page = 1
-
-def confirm_employee():
-    emp_code = st.session_state.empcode.strip()
-    firstname = st.session_state.firstname.strip()
-
-    try:
-        session = get_session()
-
-        df = session.sql(f"""
-            SELECT LASTNAME, FIRSTNAME, POSNAME, HEADDEPNAME, DEPNAME, COMPANYNAME
-            FROM {SNOWFLAKE_DATABASE}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}
-            WHERE EMPCODE = '{emp_code}' AND FIRSTNAME = '{firstname}'
-        """).to_pandas()
-
-        if not df.empty:
-            st.session_state.emp_confirmed = True
-            st.session_state.emp_info = {
-                "Компани": df.iloc[0]["COMPANYNAME"],
-                "Алба хэлтэс": df.iloc[0]["HEADDEPNAME"],
-                "Албан тушаал": df.iloc[0]["POSNAME"],
-                "Овог": df.iloc[0]["LASTNAME"],
-                "Нэр": df.iloc[0]["FIRSTNAME"],
-            }
-            st.session_state.confirmed_empcode = emp_code
-            st.session_state.confirmed_firstname = firstname
-        else:
-            st.session_state.emp_confirmed = False
-
-    except Exception as e:
-        st.session_state.emp_confirmed = False
-        st.error(f"❌ Snowflake холболтын алдаа: {e}")
-
-
-
-def go_to_intro():
-    st.session_state.page = 2
-
-def begin_survey():
-    st.session_state.page = 3
+# ---- SESSION INIT ----
+for key, value in [
+    ("category_selected", None), ("survey_type", None), ("page", -1),
+    ("emp_confirmed", None), ("answers", {}), ("logged_in", False)
+]:
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # ---- LOGIN PAGE ----
 def login_page():
-    st.image(LOGO_URL, width=210)
+    logo()
     st.title("👨‍💼 Нэвтрэх 👩‍💼")
-
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-
     if st.button("Login"):
         if username == "hr" and password == "demo123":
             st.session_state.logged_in = True
-            st.session_state.page = -0.5  # Go to directory
+            st.session_state.page = -0.5
             st.rerun()
         else:
-            st.error("❌ Invalid credentials. Please try again.")
+            st.error("❌ Invalid credentials.")
 
 # ---- DIRECTORY PAGE ----
 def directory_page():
-    st.image(LOGO_URL, width=210)
+    logo()
     st.title("Судалгааны сонголт")
-
     option = st.radio("Асуулгын төрлөө сонгоно уу:", ["📋 Exit Survey", "🎤 Exit Interview"], index=None)
-
     if st.button("Continue"):
-        if option:
-            if option == "📋 Exit Survey":
-                st.session_state.page = 0
-                st.rerun()
-            elif option == "🎤 Exit Interview":
-                st.warning("Interview flow coming soon!")
+        if option == "📋 Exit Survey":
+            st.session_state.page = 0
+            st.rerun()
+        elif option == "🎤 Exit Interview":
+            st.warning("Interview flow coming soon!")
         else:
             st.error("Та сонголт хийнэ үү.")
 
-
-# ---- INIT AUTH STATE ----
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "page" not in st.session_state:
-    st.session_state.page = -1
-
-# ---- LOGIN/DIRECTORY ROUTING ----
-if not st.session_state.logged_in:
-    login_page()
-    st.stop()
-elif st.session_state.page == -0.5:
-    directory_page()
-    st.stop()
-
-
-# ---- PAGE 0: CATEGORY + SURVEY TYPE (Single Page) ----
-if st.session_state.page == 0:
+# ---- PAGE 0: CATEGORY + SURVEY TYPE ----
+def page_0():
     logo()
     st.header("Ерөнхий мэдээлэл")
     st.markdown("**Судалгааны ангилал болон төрлөө сонгоно уу.**")
-
-    # Step 1: Category (dropdown)
     category = st.selectbox(
         "Судалгааны ангилал:",
         ["-- Сонгох --"] + list(survey_types.keys()),
@@ -272,9 +139,7 @@ if st.session_state.page == 0:
         key="category_select"
     )
     if category != "-- Сонгох --":
-        set_category(category)
-
-    # Step 2: Survey type (buttons) -- always shown if category selected
+        st.session_state.category_selected = category
     if st.session_state.category_selected:
         st.markdown("**Судалгааны төрөл:**")
         types = survey_types[st.session_state.category_selected]
@@ -282,37 +147,46 @@ if st.session_state.page == 0:
         for i, survey in enumerate(types):
             with cols[i]:
                 if st.button(survey, key=f"survey_{i}"):
-                    set_survey_type(survey)
+                    st.session_state.survey_type = survey
+                    st.session_state.page = 1
                     st.rerun()
 
 # ---- PAGE 1: EMPLOYEE CONFIRMATION ----
-elif st.session_state.page == 1:
+def page_1():
     logo()
     st.title("Ажилтны баталгаажуулалт")
-
     st.text_input("Ажилтны код", key="empcode")
     st.text_input("Нэр", key="firstname")
-
     if st.button("Баталгаажуулах", key="btn_confirm"):
-        emp_code = st.session_state.get("empcode", "").strip()
+        empcode = st.session_state.get("empcode", "").strip()
         firstname = st.session_state.get("firstname", "").strip()
-
-        if emp_code and firstname:
-            st.session_state.temp_empcode = emp_code
-            st.session_state.temp_firstname = firstname
-            confirm_employee()
-        else:
-            st.session_state.emp_confirmed = False
-            st.error("❌ Ажилтны код болон нэрийг бүрэн оруулна уу.")
-
+        if empcode and firstname:
+            try:
+                session = get_session()
+                df = session.sql(f"""
+                    SELECT LASTNAME, FIRSTNAME, POSNAME, HEADDEPNAME, COMPANYNAME
+                    FROM {DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}
+                    WHERE EMPCODE = '{empcode}' AND FIRSTNAME = '{firstname}'
+                """).to_pandas()
+                if not df.empty:
+                    emp = df.iloc[0]
+                    st.session_state.emp_confirmed = True
+                    st.session_state.confirmed_empcode = empcode
+                    st.session_state.confirmed_firstname = firstname
+                    st.session_state.emp_info = {
+                        "Компани": emp["COMPANYNAME"],
+                        "Алба хэлтэс": emp["HEADDEPNAME"],
+                        "Албан тушаал": emp["POSNAME"],
+                        "Овог": emp["LASTNAME"],
+                        "Нэр": emp["FIRSTNAME"],
+                    }
+                else:
+                    st.session_state.emp_confirmed = False
+            except Exception as e:
+                st.error(f"❌ Snowflake холболтын алдаа: {e}")
     if st.session_state.emp_confirmed is True:
         st.success("✅ Амжилттай баталгаажлаа!")
         emp = st.session_state.emp_info
-
-        # Save confirmed values permanently
-        st.session_state.confirmed_empcode = st.session_state.temp_empcode
-        st.session_state.confirmed_firstname = st.session_state.temp_firstname
-
         st.markdown("### 🧾 Таны мэдээлэл")
         st.markdown(f"""
             **Компани:** {emp['Компани']}  
@@ -320,31 +194,59 @@ elif st.session_state.page == 1:
             **Албан тушаал:** {emp['Албан тушаал']}  
             **Овог:** {emp['Овог']}  
             **Нэр:** {emp['Нэр']}
-            """)
-
+        """)
         if st.button("Үргэлжлүүлэх", key="btn_intro"):
-            go_to_intro()
+            st.session_state.page = 2
             st.rerun()
-
-    elif st.session_state.emp_confirmed is False and st.session_state.get("empcode") and st.session_state.get("firstname"):
+    elif st.session_state.emp_confirmed is False:
         st.error("❌ Ажилтны мэдээлэл буруу байна. Код болон нэрийг шалгана уу.")
 
 # ---- PAGE 2: UNIVERSAL INTRO ----
-elif st.session_state.page == 2:
-    # ✅ Check confirmed values
-    if not st.session_state.get("confirmed_empcode") or not st.session_state.get("confirmed_firstname"):
-        st.error("❌ Ажилтны мэдээлэл баталгаажаагүй байна. Эхний алхмыг дахин шалгана уу.")
-        st.stop()
-
+def page_2():
     logo()
     st.title(st.session_state.survey_type)
-    st.markdown("Сайн байна уу!")
-    st.markdown(
-        "Таны өгч буй үнэлгээ, санал хүсэлт нь бидний цаашдын хөгжлийг тодорхойлоход чухал үүрэгтэй тул дараах асуултад үнэн зөв, чин сэтгэлээсээ хариулна уу."
-    )
+    st.markdown("""
+    Сайн байна уу!  
+    Таны өгч буй үнэлгээ, санал хүсэлт нь бидний цаашдын хөгжлийг тодорхойлоход чухал үүрэгтэй тул дараах асуултад үнэн зөв, чин сэтгэлээсээ хариулна уу.
+    """)
     if st.button("Асуулга эхлэх", key="btn_begin"):
-        begin_survey()
+        st.session_state.page = 3
         st.rerun()
+
+# ---- PLACEHOLDER PAGE 3+ (To be added)
+def page_3_and_beyond():
+    logo()
+    progress_chart()
+    st.header("Асуулга эхэллээ")
+    st.write("🛠️ Render survey questions here...")
+    # Example question:
+    st.radio("Та ажлаас гарах болсон шалтгаан?", ["А", "Б", "В"], key="Reason_for_Leaving")
+    if st.button("Дуусгах"):
+        if submit_answers():
+            st.success("🎉 Судалгааг хүлээн авлаа. Баярлалаа!")
+            st.session_state.page = 999
+
+# ---- THANK YOU ----
+def page_999():
+    logo()
+    st.success("🎉 Та судалгааг амжилттай бөглөлөө. Баярлалаа!")
+
+# ---- ROUTING ----
+if not st.session_state.logged_in:
+    login_page()
+elif st.session_state.page == -0.5:
+    directory_page()
+elif st.session_state.page == 0:
+    page_0()
+elif st.session_state.page == 1:
+    page_1()
+elif st.session_state.page == 2:
+    page_2()
+elif st.session_state.page == 999:
+    page_999()
+else:
+    page_3_and_beyond()
+
 
 
 
