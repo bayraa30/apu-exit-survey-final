@@ -9,11 +9,7 @@ apply_custom_font()
 def get_session():
     return Session.builder.configs(st.secrets["connections"]["snowflake"]).create()
 
-# ---- CONFIGURATION ----
-COMPANY_NAME = "АПУ ХХК"
-SCHEMA_NAME = "APU"
-EMPLOYEE_TABLE = "APU_EMP_DATA"
-LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
+
 
 # --- Snowflake credentials (replace with your actual or use Streamlit secrets) ---
 SNOWFLAKE_USER = "YOUR_USER"
@@ -25,9 +21,9 @@ SNOWFLAKE_DATABASE = "CDNA_HR_DATA"
 
 # ---- CONFIG ----
 
-COMPANY_NAME = "АПУ ХХК"
-SCHEMA_NAME = "APU"
-EMPLOYEE_TABLE = "APU_EMP_DATA_JULY2025"
+COMPANY_NAME = "СКАЙТЭЛ ХХК"
+SCHEMA_NAME = "SKYTEL"
+EMPLOYEE_TABLE = "SKYTEL_EMP_DATA"
 ANSWER_TABLE = f"{SCHEMA_NAME}_SURVEY_ANSWERS"
 DATABASE_NAME = "CDNA_HR_DATA"
 LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
