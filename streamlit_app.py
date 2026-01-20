@@ -651,7 +651,7 @@ def login_page():
             else:
                 st.error("❌ Нэвтрэх нэр эсвэл нууц үг буруу байна.")
 
-
+st.write("DEBUG: RUNNING SKYTEL VERSION - 2026-01-20")
 def table_view_page():
     import pandas as pd
     logo()
@@ -674,7 +674,7 @@ def table_view_page():
             ),
             interviews AS (
                 SELECT DISTINCT
-                    EMP_CODE
+                    EMPCODE
                 FROM {db}.{schema}.{INTERVIEW_TABLE}
             )
             SELECT
@@ -692,7 +692,7 @@ def table_view_page():
                 e.POSNAME
             FROM answers a
             LEFT JOIN interviews i
-                ON i.EMP_CODE = a.EMPCODE
+                ON i.EMPCODE = a.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = a.EMPCODE
             ORDER BY a.SUBMITTED_AT DESC
@@ -701,7 +701,7 @@ def table_view_page():
 
             # Rename columns to Mongolian labels
             df.rename(columns={
-                "EMP_CODE": "Ажилтны код",
+                "EMPCODE": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
                 "SURVEY_DONE": "Судалгаа бөглөсөн",
                 "INTERVIEW_DONE": "Ярилцлага өгсөн",
