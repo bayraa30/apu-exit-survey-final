@@ -43,12 +43,12 @@ from datetime import datetime
 
 def submit_answers():
     EMPCODE = st.session_state.get("confirmed_empcode")
-    first_name = st.session_state.get("confirmed_firstname")
     survey_type = st.session_state.get("survey_type", "")
-    schema = SCHEMA_NAME
-    table = f"{CDNA_HR_DATA}.{SKYTEL}.{SKYTEL_SURVEY_ANSWERS}"
     submitted_at = datetime.utcnow()
     a = st.session_state.answers
+
+    # Fully-qualified table name
+    table = f"{DATABASE_NAME}.{SCHEMA_NAME}.{ANSWER_TABLE}"
 
     values = [
         EMPCODE,
@@ -72,12 +72,25 @@ def submit_answers():
     try:
         session = get_session()
 
-        escaped_values = ["'{}'".format(str(v).replace("'", "''")) if v is not None else "''" for v in values]
+        escaped_values = []
+        for idx, v in enumerate(values):
+            # EMPCODE (first value) is numeric
+            if idx == 0:
+                if v is None or str(v).strip() == "":
+                    escaped_values.append("NULL")
+                else:
+                    escaped_values.append(str(int(v)))
+                continue
+
+            if v is None:
+                escaped_values.append("NULL")
+            else:
+                escaped_values.append("'" + str(v).replace("'", "''") + "'")
 
         insert_query = f"""
             INSERT INTO {table} (
-                EMPCODE, 
-                SURVEY_TYPE, 
+                EMPCODE,
+                SURVEY_TYPE,
                 SUBMITTED_AT,
                 Reason_for_Leaving,
                 Onboarding_Effectiveness,
@@ -93,7 +106,7 @@ def submit_answers():
                 Quality_Of_Training_Programs,
                 Loyalty
             )
-            VALUES ({','.join(escaped_values)})
+            VALUES ({",".join(escaped_values)})
         """
 
         session.sql(insert_query).collect()
@@ -102,7 +115,6 @@ def submit_answers():
     except Exception as e:
         st.error(f"❌ Failed to submit answers: {e}")
         return False
-
 
 
 
