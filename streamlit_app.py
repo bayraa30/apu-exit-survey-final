@@ -37,7 +37,7 @@ INTERVIEW_TABLE = f"{SCHEMA_NAME}_INTERVIEW_ANSWERS"
 from datetime import datetime
 
 def submit_answers():
-    emp_code = st.session_state.get("confirmed_empcode")
+    USER_ID = st.session_state.get("confirmed_user_id")
     first_name = st.session_state.get("confirmed_firstname")
     survey_type = st.session_state.get("survey_type", "")
     schema = SCHEMA_NAME
@@ -46,7 +46,7 @@ def submit_answers():
     a = st.session_state.answers
 
     values = [
-        emp_code,
+        USER_ID,
         survey_type,
         submitted_at,
         a.get("Reason_for_Leaving", ""),
@@ -71,7 +71,7 @@ def submit_answers():
 
         insert_query = f"""
             INSERT INTO {table} (
-                EMPCODE, 
+                USER_ID, 
                 SURVEY_TYPE, 
                 SUBMITTED_AT,
                 Reason_for_Leaving,
@@ -198,7 +198,7 @@ def header():
     with col1:
         st.image(LOGO_URL, width=210)
     with col2:
-        if("emp_code" in st.session_state and st.session_state.emp_code):
+        if("USER_ID" in st.session_state and st.session_state.USER_ID):
             st.markdown("""
                 <style>
                 .btn-like {
@@ -213,7 +213,7 @@ def header():
             
 
             st.markdown(f"""
-                <div class="btn-like">{st.session_state.emp_code}</div>
+                <div class="btn-like">{st.session_state.USER_ID}</div>
                 """, unsafe_allow_html=True)
 
 def progress_chart():
@@ -315,7 +315,7 @@ def begin_survey():
     st.session_state.page = start_idx + 2 #survey Q1 starts from page 3 
 
 
-def confirmEmployeeActions(empcode):
+def confirmEmployeeActions(user_id):
     from datetime import date, datetime as dt  # for tenure calculation
     def _to_date_safe(v):
         try:
@@ -349,13 +349,13 @@ def confirmEmployeeActions(empcode):
             session = get_session()
             df = session.table(f"{DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}")
             match = df.filter(
-                (df["EMPCODE"] == empcode) & (df["STATUS"] == "Идэвхтэй")
+                (df["USER_ID"] == user_id) & (df["STATUS"] == "Идэвхтэй")
             ).collect()
 
             if match:
                 emp = match[0]
 
-                hire_dt = _to_date_safe(emp["LASTHIREDDATE"])
+                hire_dt = _to_date_safe(emp["WORK_START_DATE"])
                 tenure_str = _fmt_tenure(hire_dt, date.today()) if hire_dt else ""
 
                 if hire_dt:
@@ -365,12 +365,12 @@ def confirmEmployeeActions(empcode):
                     total_months = 0
 
                 st.session_state.emp_confirmed = True
-                st.session_state.confirmed_empcode = empcode
+                st.session_state.confirmed_user_id = user_id
                 st.session_state.confirmed_firstname = emp["FIRSTNAME"]
                 st.session_state.emp_info = {
-                    "Компани": emp["COMPANYNAME"],
-                    "Алба хэлтэс": emp["HEADDEPNAME"],
-                    "Албан тушаал": emp["POSNAME"],
+                    "Компани": emp["SECTOR_NAME"],
+                    "Алба хэлтэс": emp["DEPARTMENT_NAME"],
+                    "Албан тушаал": emp["POSITION_NAME"],
                     "Овог": emp["LASTNAME"],
                     "Нэр": emp["FIRSTNAME"],
                     "Ажилласан хугацаа": tenure_str,
@@ -425,14 +425,14 @@ def confirmEmployeeActions(empcode):
                 token = uuid.uuid4().hex
 
                 survey_type = st.session_state.get("survey_type", "")
-                empcode_confirmed = st.session_state.get("confirmed_empcode", "")
+                USER_ID_confirmed = st.session_state.get("confirmed_USER_ID", "")
                 total_questions_order = st.session_state.get("total_questions_order", {})
 
                 session.sql(f"""
                     INSERT INTO {DATABASE_NAME}.{SCHEMA_NAME}.{LINK_TABLE}
-                        (TOKEN, EMPCODE, SURVEY_TYPE)
+                        (TOKEN, USER_ID, SURVEY_TYPE)
                     VALUES
-                        ('{token}', '{empcode_confirmed}', '{survey_type}')
+                        ('{token}', '{USER_ID_confirmed}', '{survey_type}')
                 """).collect()
 
                 survey_link = f"{BASE_URL}?mode=link&token={token}&start_idx={total_questions_order['start_idx']}&skip_idx={total_questions_order['skip_idx']}&total_questions={total_questions_order['total_questions']}"
@@ -443,7 +443,7 @@ def confirmEmployeeActions(empcode):
                 st.error(f"❌ Линк үүсгэх үед алдаа гарлаа: {e}")
 
         def onContinue():
-            st.session_state.emp_code = empcode
+            st.session_state.USER_ID = user_id
             begin_survey()
 
 
@@ -466,7 +466,7 @@ def confirmEmployeeActions(empcode):
 def init_from_link_token():
     """
     If URL has ?mode=link&token=..., we:
-    - Look up EMPCODE + SURVEY_TYPE from APU_SURVEY_LINKS
+    - Look up USER_ID + SURVEY_TYPE from APU_SURVEY_LINKS
     - Load employee info
     - Fill session_state
     - Jump to page 2 (intro)
@@ -493,9 +493,9 @@ def init_from_link_token():
     try:
         session = get_session()
 
-        # 1) Find EMPCODE + SURVEY_TYPE from link table
+        # 1) Find USER_ID + SURVEY_TYPE from link table
         link_df = session.sql(f"""
-            SELECT EMPCODE, SURVEY_TYPE
+            SELECT USER_ID, SURVEY_TYPE
             FROM {DATABASE_NAME}.{SCHEMA_NAME}.{LINK_TABLE}
             WHERE TOKEN = '{token}'
             ORDER BY CREATED_AT DESC
@@ -506,14 +506,14 @@ def init_from_link_token():
             st.error("Энэ линк хүчингүй болсон эсвэл олдсонгүй.")
             return
 
-        empcode = link_df.iloc[0]["EMPCODE"]
+        user_id = link_df.iloc[0]["USER_ID"]
         survey_type = link_df.iloc[0]["SURVEY_TYPE"]
 
         # 2) Load employee info from EMP table
         emp_df = session.sql(f"""
-            SELECT EMPCODE, LASTNAME, FIRSTNAME, COMPANYNAME, HEADDEPNAME, POSNAME
+            SELECT USER_ID, LASTNAME, FIRSTNAME, SECTOR_NAME, HEADDEPARTMENT_NAME, POSITION_NAME
             FROM {DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}
-            WHERE EMPCODE = '{empcode}'
+            WHERE USER_ID = '{user_id}'
             LIMIT 1
         """).to_pandas()
 
@@ -526,18 +526,18 @@ def init_from_link_token():
         # 3) Hydrate session_state so it behaves like HR-confirmed
         st.session_state.logged_in = True       # 🔑 bypass HR login
         st.session_state.emp_confirmed = True
-        st.session_state.confirmed_empcode = empcode
+        st.session_state.confirmed_user_id = user_id
         st.session_state.confirmed_firstname = row["FIRSTNAME"]
         st.session_state.emp_info = {
-            "Компани": row["COMPANYNAME"],
-            "Алба хэлтэс": row["HEADDEPNAME"],
-            "Албан тушаал": row["POSNAME"],
+            "Компани": row["SECTOR_NAME"],
+            "Алба хэлтэс": row["DEPARTMENT_NAME"],
+            "Албан тушаал": row["POSITION_NAME"],
             "Овог": row["LASTNAME"],
             "Нэр": row["FIRSTNAME"],
         }
         st.session_state.survey_type = survey_type
         st.session_state.emp_firstname = row["FIRSTNAME"]
-        st.session_state.emp_code = empcode
+        st.session_state.USER_ID = user_id
 
         st.session_state.total_questions_order = {'start_idx': start_idx, 'total_questions':total_questions, 'skip_idx':skip_idx}
 
@@ -662,49 +662,49 @@ def table_view_page():
             q = f"""
             WITH answers AS (
                 SELECT
-                    EMPCODE,
+                    USER_ID,
                     SUBMITTED_AT
                 FROM {db}.{schema}.APU_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviews AS (
                 SELECT DISTINCT
-                    EMP_CODE
+                    USER_ID
                 FROM {db}.{schema}.{INTERVIEW_TABLE}
             )
             SELECT
-                a.EMPCODE                         AS EMP_CODE,
+                a.USER_ID                         AS USER_ID,
                 a.SUBMITTED_AT                    AS SUBMITTED_AT,
                 '✅'                               AS SURVEY_DONE,         -- always yes, from survey table
                 CASE 
-                    WHEN i.EMP_CODE IS NOT NULL THEN '✅'
+                    WHEN i.USER_ID IS NOT NULL THEN '✅'
                     ELSE '❌'
                 END                                AS INTERVIEW_DONE,
                 e.LASTNAME,
                 e.FIRSTNAME,
-                e.COMPANYNAME,
-                e.DEPNAME,
-                e.POSNAME
+                e.SECTOR_NAME,
+                e.DEPARTMENT_NAME,
+                e.POSITION_NAME
             FROM answers a
             LEFT JOIN interviews i
-                ON i.EMP_CODE = a.EMPCODE
+                ON i.USER_ID = a.USER_ID
             LEFT JOIN {db}.{schema}.APU_EMP_DATA_JULY2025 e
-                ON e.EMPCODE = a.EMPCODE
+                ON e.USER_ID = a.USER_ID
             ORDER BY a.SUBMITTED_AT DESC
             """
             df = session.sql(q).to_pandas()
 
             # Rename columns to Mongolian labels
             df.rename(columns={
-                "EMP_CODE": "Ажилтны код",
+                "USER_ID": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
                 "SURVEY_DONE": "Судалгаа бөглөсөн",
                 "INTERVIEW_DONE": "Ярилцлага өгсөн",
                 "LASTNAME": "Овог",
                 "FIRSTNAME": "Нэр",
-                "COMPANYNAME": "Компани",
-                "DEPNAME": "Хэлтэс",
-                "POSNAME": "Албан тушаал",
+                "SECTOR_NAME": "Компани",
+                "DEPARTMENT_NAME": "Хэлтэс",
+                "POSITION_NAME": "Албан тушаал",
             }, inplace=True)
 
             if not df.empty:
@@ -737,29 +737,29 @@ def interview_table_page():
             q = f"""
             WITH survey AS (
                 SELECT
-                    EMPCODE    AS EMP_CODE,
+                    USER_ID    AS USER_ID,
                     SUBMITTED_AT
                 FROM {db}.{schema}.APU_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviewed AS (
-                SELECT DISTINCT EMP_CODE
+                SELECT DISTINCT USER_ID
                 FROM {db}.{schema}.{interview_tbl}
             )
             SELECT
-                s.EMP_CODE,
+                s.USER_ID,
                 s.SUBMITTED_AT,
                 e.LASTNAME,
                 e.FIRSTNAME,
-                e.COMPANYNAME,
-                e.DEPNAME,
-                e.POSNAME
+                e.SECTOR_NAME,
+                e.DEPARTMENT_NAME,
+                e.POSITION_NAME
             FROM survey s
             LEFT JOIN interviewed i
-                ON i.EMP_CODE = s.EMP_CODE
+                ON i.USER_ID = s.USER_ID
             LEFT JOIN {db}.{schema}.APU_EMP_DATA_JULY2025 e
-                ON e.EMPCODE = s.EMP_CODE
-            WHERE i.EMP_CODE IS NULL
+                ON e.USER_ID = s.USER_ID
+            WHERE i.USER_ID IS NULL
             ORDER BY s.SUBMITTED_AT DESC
             """
 
@@ -770,13 +770,13 @@ def interview_table_page():
                 df["SUBMITTED_AT"] = pd.to_datetime(df["SUBMITTED_AT"]).dt.date
 
             df.rename(columns={
-                "EMP_CODE": "Ажилтны код",
+                "USER_ID": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
                 "LASTNAME": "Овог",
                 "FIRSTNAME": "Нэр",
-                "COMPANYNAME": "Компани",
-                "DEPNAME": "Хэлтэс",
-                "POSNAME": "Албан тушаал",
+                "SECTOR_NAME": "Компани",
+                "DEPARTMENT_NAME": "Хэлтэс",
+                "POSITION_NAME": "Албан тушаал",
             }, inplace=True)
 
             if df.empty:
@@ -831,7 +831,7 @@ def interview_table_page():
                 return
 
             row = selected.iloc[0]
-            st.session_state.selected_emp_code = row["Ажилтны код"]
+            st.session_state.selected_USER_ID = row["Ажилтны код"]
             st.session_state.selected_emp_lastname = row["Овог"]
             st.session_state.selected_emp_firstname = row["Нэр"]
 
@@ -925,26 +925,26 @@ def directory_page():
             if(option2):
                 col1, col2 = st.columns([3, 1])                
                 with col1:
-                    emp_code = st.text_input("Ажилтны код", key="empcode")
+                    USER_ID = st.text_input("Ажилтны код", key="USER_ID")
                 with col2:
                     if st.button("Баталгаажуулах", key="btn_confirm"):
                         st.session_state.employee_confirm_btn_clicked=True
                     
                 if(st.session_state.employee_confirm_btn_clicked == True):
-                    confirmEmployeeActions(emp_code)
+                    confirmEmployeeActions(USER_ID)
 
 
         elif option1 == "ГАРАХ ЯРИЛЦЛАГА": 
             interview_table_page()
 # --- 🔵 EXIT INTERVIEW FUNCTIONS (ADD BEFORE ROUTING) ---
-def show_survey_answers_page(empcode: str):
+def show_survey_answers_page(USER_ID: str):
     """Clean, readable survey answer viewer for HR (opens in new tab)."""
     import pandas as pd
 
     header()
     st.title("📄 Судалгааны хариу (унших горим)")
 
-    if not empcode:
+    if not USER_ID:
         st.error("Ажилтны код дутуу байна.")
         return
 
@@ -956,21 +956,21 @@ def show_survey_answers_page(empcode: str):
         q = f"""
         SELECT *
         FROM {db}.{schema}.APU_SURVEY_ANSWERS
-        WHERE EMPCODE = '{empcode}'
+        WHERE USER_ID = '{USER_ID}'
         ORDER BY SUBMITTED_AT DESC
         LIMIT 1
         """
         df = session.sql(q).to_pandas()
 
         if df.empty:
-            st.warning(f"Энэ ажилтны ({empcode}) судалгааны хариу олдсонгүй.")
+            st.warning(f"Энэ ажилтны ({USER_ID}) судалгааны хариу олдсонгүй.")
             return
 
         row = df.iloc[0]
 
         # ---- Top info section ----
         st.markdown("### 👤 Ажилтны мэдээлэл")
-        st.write(f"**Ажилтны код:** {row.get('EMPCODE', '')}")
+        st.write(f"**Ажилтны код:** {row.get('USER_ID', '')}")
         
         if "SURVEY_TYPE" in row:
             st.write(f"**Судалгааны төрөл:** {row.get('SURVEY_TYPE', '')}")
@@ -987,7 +987,7 @@ def show_survey_answers_page(empcode: str):
 
         # Columns you do NOT want to show
         hide_cols = {
-            "EMPCODE", "SURVEY_TYPE", "SUBMITTED_AT", 
+            "USER_ID", "SURVEY_TYPE", "SUBMITTED_AT", 
             "FIRSTNAME", "LASTNAME"  # if included
         }
 
@@ -1054,8 +1054,8 @@ def submit_interview_answers():
         schema = SCHEMA_NAME
         table = INTERVIEW_TABLE
 
-        emp_code = st.session_state.get("selected_emp_code")
-        if not emp_code:
+        USER_ID = st.session_state.get("selected_USER_ID")
+        if not USER_ID:
             st.error("Ажилтны код олдсонгүй. Хүснэгтээс ажилтан сонгосон эсэхээ шалгана уу.")
             return False
 
@@ -1076,7 +1076,7 @@ def submit_interview_answers():
             return False
 
         # Prepare values list
-        values = [emp_code, submitted_at, q1, q2, q3, q4, q5, q6, q7]
+        values = [USER_ID, submitted_at, q1, q2, q3, q4, q5, q6, q7]
 
         # Escape quotes
         escaped_values = []
@@ -1089,7 +1089,7 @@ def submit_interview_answers():
 
         insert_sql = f"""
             INSERT INTO {db}.{schema}.{table} (
-                EMP_CODE,
+                USER_ID,
                 SUBMITTED_AT,
                 MEANINGFUL_WORK,
                 RECOGNITION_APPRECIATION,
@@ -1115,12 +1115,12 @@ def submit_interview_answers():
 def interview_intro():
     st.title("🎤 Гарах ярилцлага – Танилцуулга")
 
-    emp_code = st.session_state.get("selected_emp_code", "")
+    USER_ID = st.session_state.get("selected_USER_ID", "")
     lname = st.session_state.get("selected_emp_lastname", "")
     fname = st.session_state.get("selected_emp_firstname", "")
 
-    if emp_code:
-        st.markdown(f"**Сонгосон ажилтан:** {emp_code} – {lname} {fname}")
+    if USER_ID:
+        st.markdown(f"**Сонгосон ажилтан:** {USER_ID} – {lname} {fname}")
 
     st.write(
         "Доорх ярилцлагын асуултууд нь ажилтны гарах шийдвэрийн шалтгаан, "
@@ -1131,8 +1131,8 @@ def interview_intro():
 
     # --- LEFT COLUMN: view survey answers button ---
     with col1:
-        if emp_code:
-            view_url = f"{BASE_URL}?mode=view_survey&empcode={emp_code}"
+        if USER_ID:
+            view_url = f"{BASE_URL}?mode=view_survey&USER_ID={USER_ID}"
 
             st.markdown(
                 f'''
@@ -1215,13 +1215,13 @@ def interview_form():
 
 # END PAGE --------------------------------------------------------------
 def interview_end():
-    emp_code = st.session_state.get("selected_emp_code", "")
+    USER_ID = st.session_state.get("selected_USER_ID", "")
     lname = st.session_state.get("selected_emp_lastname", "")
     fname = st.session_state.get("selected_emp_firstname", "")
     submitted_at = st.session_state.get("interview_submitted_at", None)
 
     st.success("🎉 Ярилцлага амжилттай дууслаа, баярлалаа!")
-    st.write(f"👤 Ажилтан: {emp_code} - {lname} {fname}")
+    st.write(f"👤 Ажилтан: {USER_ID} - {lname} {fname}")
     if submitted_at:
         st.write(f"🕒 Илгээсэн огноо (UTC): {submitted_at}")
 
@@ -1283,7 +1283,7 @@ if st.session_state.page == 0:
 # ---- SURVEY QUESTION 1 ----
 elif st.session_state.page == 3:
     # ✅ Check confirmed values
-    # if not st.session_state.get("confirmed_empcode") or not st.session_state.get("confirmed_firstname"):
+    # if not st.session_state.get("confirmed_USER_ID") or not st.session_state.get("confirmed_firstname"):
     #     st.error("❌ Ажилтны мэдээлэл баталгаажаагүй байна. Эхний алхмыг дахин шалгана уу.")
     #     st.stop()
     
