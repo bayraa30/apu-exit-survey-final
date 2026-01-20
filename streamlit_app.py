@@ -321,7 +321,8 @@ def begin_survey():
 
 
 def confirmEmployeeActions(empcode):
-    from datetime import date, datetime as dt  # for tenure calculation
+    from datetime import date, datetime as dt
+
     def _to_date_safe(v):
         try:
             if isinstance(v, dt):
@@ -353,14 +354,14 @@ def confirmEmployeeActions(empcode):
         try:
             session = get_session()
             df = session.table(f"{DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}")
-            match = df.filter(
-                (df["EMPCODE"] == empcode) & (df["STATUS"] == "Идэвхтэй")
-            ).collect()
+
+            # ✅ STATUS FILTER REMOVED
+            match = df.filter(df["EMPCODE"] == empcode).collect()
 
             if match:
                 emp = match[0]
 
-                hire_dt = _to_date_safe(emp["LASTHIREDDATE"])
+                hire_dt = _to_date_safe(emp.get("LASTHIREDDATE"))
                 tenure_str = _fmt_tenure(hire_dt, date.today()) if hire_dt else ""
 
                 if hire_dt:
@@ -371,28 +372,28 @@ def confirmEmployeeActions(empcode):
 
                 st.session_state.emp_confirmed = True
                 st.session_state.confirmed_empcode = empcode
-                st.session_state.confirmed_firstname = emp["FIRSTNAME"]
+                st.session_state.confirmed_firstname = emp.get("FIRSTNAME")
+
                 st.session_state.emp_info = {
-                    "Компани": emp["COMPANYNAME"],
-                    "Алба хэлтэс": emp["HEADDEPNAME"],
-                    "Албан тушаал": emp["POSNAME"],
-                    "Овог": emp["LASTNAME"],
-                    "Нэр": emp["FIRSTNAME"],
+                    "Компани": emp.get("COMPANYNAME"),
+                    "Алба хэлтэс": emp.get("HEADDEPNAME"),
+                    "Албан тушаал": emp.get("POSNAME"),
+                    "Овог": emp.get("LASTNAME"),
+                    "Нэр": emp.get("FIRSTNAME"),
                     "Ажилласан хугацаа": tenure_str,
                 }
+
                 st.session_state.tenure_months = total_months
 
                 category = st.session_state.get("category_selected")
                 total_duration_in_str = categorize_employment_duration(total_months)
-                
+
                 total_questions_order = total_questions_number_dict[category][total_duration_in_str]
                 st.session_state.total_questions_order = total_questions_order
 
                 if category:
                     auto_type = choose_survey_type_for_db(category, total_months)
                     st.session_state.survey_type = auto_type
-                    print(auto_type, ' setting survey type')
-                    print(st.session_state.survey_type, ' setting survey type')
 
             else:
                 st.session_state.emp_confirmed = False
@@ -400,6 +401,7 @@ def confirmEmployeeActions(empcode):
         except Exception as e:
             st.error(f"❌ Snowflake холболтын алдаа: {e}")
             st.session_state.emp_confirmed = False
+
 
 
     ## employee confirmed
