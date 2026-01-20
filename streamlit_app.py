@@ -355,13 +355,21 @@ def confirmEmployeeActions(empcode):
             session = get_session()
             df = session.table(f"{DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}")
 
-            # ✅ STATUS FILTER REMOVED
-            match = df.filter(df["EMPCODE"] == empcode).collect()
+            # EMPCODE is NUMBER in Snowflake -> cast input to int
+            try:
+                empcode_num = int(str(empcode).strip())
+            except Exception:
+                st.session_state.emp_confirmed = False
+                st.error("❌ Ажилтны код зөвхөн тоо байна.")
+                return
+
+            match = df.filter(df["EMPCODE"] == empcode_num).collect()
 
             if match:
                 emp = match[0]
 
-                hire_dt = _to_date_safe(emp.get("LASTHIREDDATE"))
+                # Use WORK_START_DATE (exists in your table)
+                hire_dt = _to_date_safe(emp["WORK_START_DATE"])
                 tenure_str = _fmt_tenure(hire_dt, date.today()) if hire_dt else ""
 
                 if hire_dt:
@@ -371,15 +379,16 @@ def confirmEmployeeActions(empcode):
                     total_months = 0
 
                 st.session_state.emp_confirmed = True
-                st.session_state.confirmed_empcode = empcode
-                st.session_state.confirmed_firstname = emp.get("FIRSTNAME")
+                st.session_state.confirmed_empcode = empcode_num
+                st.session_state.confirmed_firstname = emp["FIRSTNAME"]
 
+                # Your table has DEPNAME (not HEADDEPNAME)
                 st.session_state.emp_info = {
-                    "Компани": emp.get("COMPANYNAME"),
-                    "Алба хэлтэс": emp.get("HEADDEPNAME"),
-                    "Албан тушаал": emp.get("POSNAME"),
-                    "Овог": emp.get("LASTNAME"),
-                    "Нэр": emp.get("FIRSTNAME"),
+                    "Компани": emp["COMPANYNAME"],
+                    "Алба хэлтэс": emp["DEPNAME"],
+                    "Албан тушаал": emp["POSNAME"],
+                    "Овог": emp["LASTNAME"],
+                    "Нэр": emp["FIRSTNAME"],
                     "Ажилласан хугацаа": tenure_str,
                 }
 
@@ -392,8 +401,7 @@ def confirmEmployeeActions(empcode):
                 st.session_state.total_questions_order = total_questions_order
 
                 if category:
-                    auto_type = choose_survey_type_for_db(category, total_months)
-                    st.session_state.survey_type = auto_type
+                    st.session_state.survey_type = choose_survey_type_for_db(category, total_months)
 
             else:
                 st.session_state.emp_confirmed = False
