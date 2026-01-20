@@ -680,11 +680,11 @@ def table_view_page():
                 FROM {db}.{schema}.{INTERVIEW_TABLE}
             )
             SELECT
-                a.EMPCODE                         AS EMP_CODE,
+                a.EMPCODE                         AS EMPCODE,
                 a.SUBMITTED_AT                    AS SUBMITTED_AT,
                 '✅'                               AS SURVEY_DONE,         -- always yes, from survey table
                 CASE 
-                    WHEN i.EMP_CODE IS NOT NULL THEN '✅'
+                    WHEN i.EMPCODE IS NOT NULL THEN '✅'
                     ELSE '❌'
                 END                                AS INTERVIEW_DONE,
                 e.LASTNAME,
