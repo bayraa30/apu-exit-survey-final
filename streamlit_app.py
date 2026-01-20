@@ -42,7 +42,7 @@ INTERVIEW_TABLE = f"{SCHEMA_NAME}_INTERVIEW_ANSWERS"
 from datetime import datetime
 
 def submit_answers():
-    emp_code = st.session_state.get("confirmed_empcode")
+    EMPCODE = st.session_state.get("confirmed_empcode")
     first_name = st.session_state.get("confirmed_firstname")
     survey_type = st.session_state.get("survey_type", "")
     schema = SCHEMA_NAME
@@ -51,7 +51,7 @@ def submit_answers():
     a = st.session_state.answers
 
     values = [
-        emp_code,
+        EMPCODE,
         survey_type,
         submitted_at,
         a.get("Reason_for_Leaving", ""),
@@ -203,7 +203,7 @@ def header():
     with col1:
         st.image(LOGO_URL, width=210)
     with col2:
-        if("emp_code" in st.session_state and st.session_state.emp_code):
+        if("EMPCODE" in st.session_state and st.session_state.EMPCODE):
             st.markdown("""
                 <style>
                 .btn-like {
@@ -218,7 +218,7 @@ def header():
             
 
             st.markdown(f"""
-                <div class="btn-like">{st.session_state.emp_code}</div>
+                <div class="btn-like">{st.session_state.EMPCODE}</div>
                 """, unsafe_allow_html=True)
 
 def progress_chart():
@@ -458,7 +458,7 @@ def confirmEmployeeActions(empcode):
                 st.error(f"❌ Линк үүсгэх үед алдаа гарлаа: {e}")
 
         def onContinue():
-            st.session_state.emp_code = empcode
+            st.session_state.EMPCODE = empcode
             begin_survey()
 
 
@@ -552,7 +552,7 @@ def init_from_link_token():
         }
         st.session_state.survey_type = survey_type
         st.session_state.emp_firstname = row["FIRSTNAME"]
-        st.session_state.emp_code = empcode
+        st.session_state.EMPCODE = empcode
 
         st.session_state.total_questions_order = {'start_idx': start_idx, 'total_questions':total_questions, 'skip_idx':skip_idx}
 
@@ -752,17 +752,17 @@ def interview_table_page():
             q = f"""
             WITH survey AS (
                 SELECT
-                    EMPCODE    AS EMP_CODE,
+                    EMPCODE    AS EMPCODE,
                     SUBMITTED_AT
                 FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviewed AS (
-                SELECT DISTINCT EMP_CODE
+                SELECT DISTINCT EMPCODE
                 FROM {db}.{schema}.{interview_tbl}
             )
             SELECT
-                s.EMP_CODE,
+                s.EMPCODE,
                 s.SUBMITTED_AT,
                 e.LASTNAME,
                 e.FIRSTNAME,
@@ -771,10 +771,10 @@ def interview_table_page():
                 e.POSNAME
             FROM survey s
             LEFT JOIN interviewed i
-                ON i.EMP_CODE = s.EMP_CODE
+                ON i.EMPCODE = s.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
-                ON e.EMPCODE = s.EMP_CODE
-            WHERE i.EMP_CODE IS NULL
+                ON e.EMPCODE = s.EMPCODE
+            WHERE i.EMPCODE IS NULL
             ORDER BY s.SUBMITTED_AT DESC
             """
 
@@ -785,7 +785,7 @@ def interview_table_page():
                 df["SUBMITTED_AT"] = pd.to_datetime(df["SUBMITTED_AT"]).dt.date
 
             df.rename(columns={
-                "EMP_CODE": "Ажилтны код",
+                "EMPCODE": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
                 "LASTNAME": "Овог",
                 "FIRSTNAME": "Нэр",
@@ -846,7 +846,7 @@ def interview_table_page():
                 return
 
             row = selected.iloc[0]
-            st.session_state.selected_emp_code = row["Ажилтны код"]
+            st.session_state.selected_EMPCODE = row["Ажилтны код"]
             st.session_state.selected_emp_lastname = row["Овог"]
             st.session_state.selected_emp_firstname = row["Нэр"]
 
@@ -940,13 +940,13 @@ def directory_page():
             if(option2):
                 col1, col2 = st.columns([3, 1])                
                 with col1:
-                    emp_code = st.text_input("Ажилтны код", key="empcode")
+                    EMPCODE = st.text_input("Ажилтны код", key="empcode")
                 with col2:
                     if st.button("Баталгаажуулах", key="btn_confirm"):
                         st.session_state.employee_confirm_btn_clicked=True
                     
                 if(st.session_state.employee_confirm_btn_clicked == True):
-                    confirmEmployeeActions(emp_code)
+                    confirmEmployeeActions(EMPCODE)
 
 
         elif option1 == "ГАРАХ ЯРИЛЦЛАГА": 
@@ -1069,8 +1069,8 @@ def submit_interview_answers():
         schema = SCHEMA_NAME
         table = INTERVIEW_TABLE
 
-        emp_code = st.session_state.get("selected_emp_code")
-        if not emp_code:
+        EMPCODE = st.session_state.get("selected_EMPCODE")
+        if not EMPCODE:
             st.error("Ажилтны код олдсонгүй. Хүснэгтээс ажилтан сонгосон эсэхээ шалгана уу.")
             return False
 
@@ -1091,7 +1091,7 @@ def submit_interview_answers():
             return False
 
         # Prepare values list
-        values = [emp_code, submitted_at, q1, q2, q3, q4, q5, q6, q7]
+        values = [EMPCODE, submitted_at, q1, q2, q3, q4, q5, q6, q7]
 
         # Escape quotes
         escaped_values = []
@@ -1104,7 +1104,7 @@ def submit_interview_answers():
 
         insert_sql = f"""
             INSERT INTO {db}.{schema}.{table} (
-                EMP_CODE,
+                EMPCODE,
                 SUBMITTED_AT,
                 MEANINGFUL_WORK,
                 RECOGNITION_APPRECIATION,
@@ -1130,12 +1130,12 @@ def submit_interview_answers():
 def interview_intro():
     st.title("🎤 Гарах ярилцлага – Танилцуулга")
 
-    emp_code = st.session_state.get("selected_emp_code", "")
+    EMPCODE = st.session_state.get("selected_EMPCODE", "")
     lname = st.session_state.get("selected_emp_lastname", "")
     fname = st.session_state.get("selected_emp_firstname", "")
 
-    if emp_code:
-        st.markdown(f"**Сонгосон ажилтан:** {emp_code} – {lname} {fname}")
+    if EMPCODE:
+        st.markdown(f"**Сонгосон ажилтан:** {EMPCODE} – {lname} {fname}")
 
     st.write(
         "Доорх ярилцлагын асуултууд нь ажилтны гарах шийдвэрийн шалтгаан, "
@@ -1146,8 +1146,8 @@ def interview_intro():
 
     # --- LEFT COLUMN: view survey answers button ---
     with col1:
-        if emp_code:
-            view_url = f"{BASE_URL}?mode=view_survey&empcode={emp_code}"
+        if EMPCODE:
+            view_url = f"{BASE_URL}?mode=view_survey&empcode={EMPCODE}"
 
             st.markdown(
                 f'''
@@ -1230,13 +1230,13 @@ def interview_form():
 
 # END PAGE --------------------------------------------------------------
 def interview_end():
-    emp_code = st.session_state.get("selected_emp_code", "")
+    EMPCODE = st.session_state.get("selected_EMPCODE", "")
     lname = st.session_state.get("selected_emp_lastname", "")
     fname = st.session_state.get("selected_emp_firstname", "")
     submitted_at = st.session_state.get("interview_submitted_at", None)
 
     st.success("🎉 Ярилцлага амжилттай дууслаа, баярлалаа!")
-    st.write(f"👤 Ажилтан: {emp_code} - {lname} {fname}")
+    st.write(f"👤 Ажилтан: {EMPCODE} - {lname} {fname}")
     if submitted_at:
         st.write(f"🕒 Илгээсэн огноо (UTC): {submitted_at}")
 
