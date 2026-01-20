@@ -11,9 +11,9 @@ def get_session():
     return Session.builder.configs(st.secrets["connections"]["snowflake"]).create()
 
 # ---- CONFIGURATION ----
-COMPANY_NAME = "АПУ ХХК"
-SCHEMA_NAME = "APU"
-EMPLOYEE_TABLE = "APU_EMP_DATA"
+COMPANY_NAME = "СКАЙТЭЛ ГРУПП"
+SCHEMA_NAME = "SKYTEL"
+EMPLOYEE_TABLE = "SKYTEL_EMP_DATA_FINAL"
 LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
 
 # --- Snowflake credentials (replace with your actual or use Streamlit secrets) ---
@@ -26,14 +26,14 @@ SNOWFLAKE_DATABASE = "CDNA_HR_DATA"
 
 # ---- CONFIG ----
 
-COMPANY_NAME = "АПУ ХХК"
-SCHEMA_NAME = "APU"
-EMPLOYEE_TABLE = "APU_EMP_DATA_JULY2025"
+COMPANY_NAME = "СКАЙТЭЛ ГРУПП"
+SCHEMA_NAME = "SKYTEL"
+EMPLOYEE_TABLE = "SKYTEL_EMP_DATA_FINAL"
 ANSWER_TABLE = f"{SCHEMA_NAME}_SURVEY_ANSWERS"
 DATABASE_NAME = "CDNA_HR_DATA"
 LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
-LINK_TABLE = f"{SCHEMA_NAME}_SURVEY_LINKS"  # -> APU_SURVEY_LINKS
-BASE_URL = "https://apu-exit-survey-cggmobn4x6kmsmpavyuu5z.streamlit.app/"  
+LINK_TABLE = f"{SCHEMA_NAME}_SURVEY_LINKS"  # -> SKYTEL_SURVEY_LINKS
+BASE_URL = "https://skytel-exit-survey-jwscbinlhml4eiwahwqkfq.streamlit.app/"  
 # BASE_URL = "http://localhost:8501/"  
 INTERVIEW_TABLE = f"{SCHEMA_NAME}_INTERVIEW_ANSWERS"
 
@@ -471,7 +471,7 @@ def confirmEmployeeActions(empcode):
 def init_from_link_token():
     """
     If URL has ?mode=link&token=..., we:
-    - Look up EMPCODE + SURVEY_TYPE from APU_SURVEY_LINKS
+    - Look up EMPCODE + SURVEY_TYPE from SKYTEL_SURVEY_LINKS
     - Load employee info
     - Fill session_state
     - Jump to page 2 (intro)
@@ -669,7 +669,7 @@ def table_view_page():
                 SELECT
                     EMPCODE,
                     SUBMITTED_AT
-                FROM {db}.{schema}.APU_SURVEY_ANSWERS
+                FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviews AS (
@@ -693,7 +693,7 @@ def table_view_page():
             FROM answers a
             LEFT JOIN interviews i
                 ON i.EMP_CODE = a.EMPCODE
-            LEFT JOIN {db}.{schema}.APU_EMP_DATA_JULY2025 e
+            LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = a.EMPCODE
             ORDER BY a.SUBMITTED_AT DESC
             """
@@ -744,7 +744,7 @@ def interview_table_page():
                 SELECT
                     EMPCODE    AS EMP_CODE,
                     SUBMITTED_AT
-                FROM {db}.{schema}.APU_SURVEY_ANSWERS
+                FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviewed AS (
@@ -762,7 +762,7 @@ def interview_table_page():
             FROM survey s
             LEFT JOIN interviewed i
                 ON i.EMP_CODE = s.EMP_CODE
-            LEFT JOIN {db}.{schema}.APU_EMP_DATA_JULY2025 e
+            LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = s.EMP_CODE
             WHERE i.EMP_CODE IS NULL
             ORDER BY s.SUBMITTED_AT DESC
@@ -960,7 +960,7 @@ def show_survey_answers_page(empcode: str):
 
         q = f"""
         SELECT *
-        FROM {db}.{schema}.APU_SURVEY_ANSWERS
+        FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
         WHERE EMPCODE = '{empcode}'
         ORDER BY SUBMITTED_AT DESC
         LIMIT 1
