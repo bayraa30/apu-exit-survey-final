@@ -46,7 +46,7 @@ def submit_answers():
     first_name = st.session_state.get("confirmed_firstname")
     survey_type = st.session_state.get("survey_type", "")
     schema = SCHEMA_NAME
-    table = f"{schema}_SURVEY_ANSWERS"
+    table = f"{CDNA_HR_DATA}.{SKYTEL}.{SKYTEL_SURVEY_ANSWERS}"
     submitted_at = datetime.utcnow()
     a = st.session_state.answers
 
