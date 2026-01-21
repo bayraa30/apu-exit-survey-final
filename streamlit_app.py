@@ -1095,8 +1095,8 @@ def submit_interview_answers():
         schema = SCHEMA_NAME
         table = INTERVIEW_TABLE
 
-        emp_code = st.session_state.get("selected_emp_code")
-        if not emp_code:
+        EMPCODE = st.session_state.get("selected_EMPCODE")
+        if not EMPCODE:
             st.error("Ажилтны код олдсонгүй. Хүснэгтээс ажилтан сонгосон эсэхээ шалгана уу.")
             return False
 
@@ -1130,7 +1130,7 @@ def submit_interview_answers():
 
         insert_sql = f"""
             INSERT INTO {db}.{schema}.{table} (
-                EMP_CODE,
+                EMPCODE,
                 SUBMITTED_AT,
                 Q1_SCORE, Q1_DETAIL,
                 Q2_SCORE, Q2_DETAIL,
@@ -1141,7 +1141,7 @@ def submit_interview_answers():
                 Q7_FACTORS
             )
             VALUES (
-                {_sql_str(emp_code)},
+                {_sql_str(EMPCODE)},
                 {_sql_str(submitted_at)},
                 {_sql_str(q1_score)},  {_sql_str(q1_detail)},
                 {_sql_str(q2_score)},  {_sql_str(q2_detail)},
