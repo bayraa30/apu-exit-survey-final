@@ -690,7 +690,6 @@ def table_view_page():
             schema = SCHEMA_NAME
             db = DATABASE_NAME
 
-            # Join survey answers with employee master and check interview status
             q = f"""
             WITH answers AS (
                 SELECT
@@ -701,15 +700,15 @@ def table_view_page():
             ),
             interviews AS (
                 SELECT DISTINCT
-                    EMPCODE
+                    EMP_CODE
                 FROM {db}.{schema}.{INTERVIEW_TABLE}
             )
             SELECT
                 a.EMPCODE                         AS EMPCODE,
                 a.SUBMITTED_AT                    AS SUBMITTED_AT,
-                '✅'                               AS SURVEY_DONE,         -- always yes, from survey table
-                CASE 
-                    WHEN i.EMPCODE IS NOT NULL THEN '✅'
+                '✅'                               AS SURVEY_DONE,
+                CASE
+                    WHEN i.EMP_CODE IS NOT NULL THEN '✅'
                     ELSE '❌'
                 END                                AS INTERVIEW_DONE,
                 e.LASTNAME,
@@ -719,14 +718,14 @@ def table_view_page():
                 e.POSNAME
             FROM answers a
             LEFT JOIN interviews i
-                ON i.EMPCODE = a.EMPCODE
+                ON i.EMP_CODE = a.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = a.EMPCODE
             ORDER BY a.SUBMITTED_AT DESC
             """
+
             df = session.sql(q).to_pandas()
 
-            # Rename columns to Mongolian labels
             df.rename(columns={
                 "EMPCODE": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
@@ -740,19 +739,17 @@ def table_view_page():
             }, inplace=True)
 
             if not df.empty:
-                # ⏱ Only show date part for submitted_at
                 df["Бөглөсөн огноо"] = pd.to_datetime(df["Бөглөсөн огноо"]).dt.date
 
-            # Show table
             st.dataframe(df, width="stretch")
 
         except Exception as e:
             st.error(f"❌ Snowflake холболтын алдаа: {e}")
 
-        # Continue to directory
         if st.button("Үргэлжлүүлэх → Судалгааны сонголт"):
             st.session_state.page = -0.5
             st.rerun()
+
 
 
 def interview_table_page():
