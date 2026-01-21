@@ -1070,11 +1070,11 @@ def final_thank_you():
 
     # Not a magic link → do nothing
     if mode != "link" or not token:
-        if st.button("📁 Цэс рүү буцах", key="btn_back_to_directory"):
+        if st.button("📁 Цэс рүү буцах", key="btn_back_to_directory", width=200):
             st.session_state.page = -1
             st.rerun()
 
-        if st.button("🚪 Гарах", key="btn_logout"):
+        if st.button("🚪 Гарах", key="btn_logout", width=200):
                 st.session_state.clear()
                 st.rerun()
 
