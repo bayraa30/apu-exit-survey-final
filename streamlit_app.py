@@ -14,7 +14,6 @@ def get_session():
 COMPANY_NAME = "СКАЙТЭЛ ГРУПП"
 SCHEMA_NAME = "SKYTEL"
 EMPLOYEE_TABLE = "SKYTEL_EMP_DATA_FINAL"
-LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
 
 # --- Snowflake credentials (replace with your actual or use Streamlit secrets) ---
 SNOWFLAKE_USER = "YOUR_USER"
@@ -31,7 +30,7 @@ SCHEMA_NAME = "SKYTEL"
 EMPLOYEE_TABLE = "SKYTEL_EMP_DATA_FINAL"
 ANSWER_TABLE = f"{SCHEMA_NAME}_SURVEY_ANSWERS"
 DATABASE_NAME = "CDNA_HR_DATA"
-LOGO_URL = "https://i.imgur.com/DgCfZ9B.png"
+LOGO_URL = "static/images/logo-skytel-blue.svg"
 LINK_TABLE = f"{SCHEMA_NAME}_SURVEY_LINKS"  # -> SKYTEL_SURVEY_LINKS
 BASE_URL = "https://skytel-exit-survey-jwscbinlhml4eiwahwqkfq.streamlit.app/"  
 # BASE_URL = "http://localhost:8501/"  
@@ -308,7 +307,7 @@ def nextPageBtn(disabled, answer_key, answer):
                     align-self: end;
                     padding:  clamp(0.1rem, 0.6rem, 1rem) clamp(0.25rem, 1rem, 1.5rem) ;
                     color: #fff;
-                    background-color: #ec1c24 !important;  
+                    background-color: #ff5000 !important;  
                     border-radius: 20px; 
                 }
 
@@ -628,14 +627,7 @@ def login_page():
     # Use columns to center horizontally
     col1, col2, col3 = st.columns([2,1,2])
     with col2:
-        st.markdown(
-            """
-            <div style="text-align: center; margin-bottom: 2em;">
-                <img src="https://i.imgur.com/DgCfZ9B.png" width="200">
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        logo()
 
         username = st.text_input("НЭВТРЭХ НЭР", )
         password = st.text_input("НУУЦ ҮГ", type="password")
@@ -651,7 +643,7 @@ def login_page():
                     display: flex !important;
                     flex-direction: row;
                     justify-content: center;
-                    background-color: #ec1c24 !important; /* Red */
+                    background-color: #ff5000 !important; /* Red */
                     color: white !important;          /* Text color */
                     height: 45px;
                     font-size: 18px;
@@ -673,7 +665,6 @@ def login_page():
             else:
                 st.error("❌ Нэвтрэх нэр эсвэл нууц үг буруу байна.")
 
-st.write("DEBUG: RUNNING SKYTEL VERSION - 2026-01-20")
 def table_view_page():
     import pandas as pd
     logo()
@@ -874,7 +865,7 @@ def directory_page():
 
         st.markdown("""
             <h1 style="text-align: left; margin-left: 0; font-size: 3em; height:60vh; display:table; ">
-                    <p style="display:table-cell; vertical-align: middle;">Ажилтны ерөнхий <span style="color: #ec1c24;"> мэдээлэл </span> </p>
+                    <p style="display:table-cell; vertical-align: middle;">Ажилтны ерөнхий <span style="color: #ff5000;"> мэдээлэл </span> </p>
             </h1>
         """, unsafe_allow_html=True)
 
@@ -921,7 +912,7 @@ def directory_page():
 
                 /* Hover effect */
                 div[data-testid="stRadio"] label:hover {
-                    border-color: #ec1c24;
+                    border-color: #ff5000;
                 }
 
               
@@ -933,7 +924,7 @@ def directory_page():
                 /* Checked/selected option */
                 div[data-testid="stRadio"] > div label:has(input[type="radio"]:checked){
                     background-color: #fefefe !important;
-                    border-color: #ec1c24 !important;
+                    border-color: #ff5000 !important;
                 }
                 
                 div[data-testid="stLayoutWrapper"] div:not([data-testid="stRadio"]) div[data-testid="stHorizontalBlock"] {
@@ -1362,7 +1353,7 @@ elif st.session_state.page == 3:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;  padding: 1rem;">
-                    <p> Танд ажлаас гарахад нөлөөлсөн<span style="color: #ec1c24;"> хүчин зүйл, шалтгаантай</span> хамгийн их тохирч байгаа 1-3 хариултыг сонгоно уу?</p>
+                    <p> Танд ажлаас гарахад нөлөөлсөн<span style="color: #ff5000;"> хүчин зүйл, шалтгаантай</span> хамгийн их тохирч байгаа 1-3 хариултыг сонгоно уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -1424,7 +1415,7 @@ elif st.session_state.page == 3:
             div[data-testid="stCheckbox"] input[type="checkbox"]:checked ~ div,
             div[data-testid="stCheckbox"] label:has(input[type="checkbox"]:checked) > div,
             div[data-testid="stCheckbox"] label:has(input[type="checkbox"]:checked) {
-                border-color: #ec1c24;
+                border-color: #ff5000;
             }
 
         </style>
@@ -1506,7 +1497,7 @@ elif st.session_state.page == 4:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3; padding: 1rem;">
-                    <p> Дасан зохицох хөтөлбөрийн хэрэгжилт эсвэл баг хамт олон, шууд удирдлага танд өдөр тутмын ажил, үүрэг даалгавруудыг хурдан ойлгоход туслах <span style="color: #ec1c24;"> хангалттай мэдээлэл, заавар</span> өгч чадсан уу?</p>
+                    <p> Дасан зохицох хөтөлбөрийн хэрэгжилт эсвэл баг хамт олон, шууд удирдлага танд өдөр тутмын ажил, үүрэг даалгавруудыг хурдан ойлгоход туслах <span style="color: #ff5000;"> хангалттай мэдээлэл, заавар</span> өгч чадсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -1644,7 +1635,7 @@ elif st.session_state.page == 5:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Ажлын байрны тодорхойлолт таны <span style="color: #ec1c24;"> өдөр тутмын </span> ажил үүрэгтэй нийцэж байсан уу??</p>
+                    <p> Ажлын байрны тодорхойлолт таны <span style="color: #ff5000;"> өдөр тутмын </span> ажил үүрэгтэй нийцэж байсан уу??</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -1751,7 +1742,7 @@ elif st.session_state.page == 6:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Таны шууд удирдлага санал зөвлөгөө өгч, <span style="color: #ec1c24;"> эргэх холбоотой </span>ажилладаг байсан уу?</p>
+                    <p> Таны шууд удирдлага санал зөвлөгөө өгч, <span style="color: #ff5000;"> эргэх холбоотой </span>ажилладаг байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -1898,7 +1889,7 @@ elif st.session_state.page == 7:
             }
                     
             button#imgBtn span:hover{
-                border-color: #ec1c24;
+                border-color: #ff5000;
             }
                     
         /* Mobile layout */
@@ -2003,7 +1994,7 @@ elif st.session_state.page == 8:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Таны харъяалагдаж буй баг доторх <span style="color: #ec1c24;">хамтын ажиллагаа,</span> хоорондын харилцаанд хэр сэтгэл хангалуун байсан бэ?</p>
+                    <p> Таны харъяалагдаж буй баг доторх <span style="color: #ff5000;">хамтын ажиллагаа,</span> хоорондын харилцаанд хэр сэтгэл хангалуун байсан бэ?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2054,14 +2045,14 @@ elif st.session_state.page == 8:
 
                 /* Hover effect */
                 div[data-testid="stRadio"] label:hover {
-                    border-color: #ec1c24;
+                    border-color: #ff5000;
                 }
 
                 /* Checked/selected option */
                 div[data-testid="stRadio"] input:checked + label {
                     background-color: #FF0000 !important; /* selected color */
                     color: white !important;
-                    border-color: #ec1c24 !important;
+                    border-color: #ff5000 !important;
                 }
 
                 /* Hide default radio circle */
@@ -2103,7 +2094,7 @@ elif st.session_state.page == 9:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Танд өдөр тутмын ажлаа <span style="color: #ec1c24;">урам зоригтой </span> хийхэд ямар хүчин зүйлс нөлөөлдөг байсан бэ?</p>
+                    <p> Танд өдөр тутмын ажлаа <span style="color: #ff5000;">урам зоригтой </span> хийхэд ямар хүчин зүйлс нөлөөлдөг байсан бэ?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2165,7 +2156,7 @@ elif st.session_state.page == 9:
             div[data-testid="stCheckbox"] input[type="checkbox"]:checked ~ div,
             div[data-testid="stCheckbox"] label:has(input[type="checkbox"]:checked) > div,
             div[data-testid="stCheckbox"] label:has(input[type="checkbox"]:checked) {
-                border-color: #ec1c24;
+                border-color: #ff5000;
             }
 
         </style>
@@ -2235,7 +2226,7 @@ elif st.session_state.page == 10:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Байгууллага танд ажиллах <span style="color: #ec1c24;"> таатай нөхцөл</span>, ажил амьдралын тэнцвэртэй байдлаар ханган дэмждэг байсан уу? /Жнь: уян хатан цагийн хуваарь, ажлын байрны орчин/</p>
+                    <p> Байгууллага танд ажиллах <span style="color: #ff5000;"> таатай нөхцөл</span>, ажил амьдралын тэнцвэртэй байдлаар ханган дэмждэг байсан уу? /Жнь: уян хатан цагийн хуваарь, ажлын байрны орчин/</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2412,14 +2403,14 @@ elif st.session_state.page == 11:
 
         #         /* Hover effect */
         #         div[data-testid="stRadio"] label:hover {
-        #             border-color: #ec1c24;
+        #             border-color: #ff5000;
         #         }
 
         #         /* Checked/selected option */
         #         div[data-testid="stRadio"] input:checked + label {
         #             background-color: #FF0000 !important; /* selected color */
         #             color: white !important;
-        #             border-color: #ec1c24 !important;
+        #             border-color: #ff5000 !important;
         #         }
 
         #         /* Hide default radio circle */
@@ -2611,7 +2602,7 @@ elif st.session_state.page == 12:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Таны ажлын гүйцэтгэлийг (<span style="color: #ec1c24;">KPI, LTI</span>) үнэн зөв, шударга үнэлэн дүгнэдэг байсан уу?</p>
+                    <p> Таны ажлын гүйцэтгэлийг (<span style="color: #ff5000;">KPI, LTI</span>) үнэн зөв, шударга үнэлэн дүгнэдэг байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2664,14 +2655,14 @@ elif st.session_state.page == 12:
 
         #         /* Hover effect */
         #         div[data-testid="stRadio"] label:hover {
-        #             border-color: #ec1c24;
+        #             border-color: #ff5000;
         #         }
 
         #         /* Checked/selected option */
         #         div[data-testid="stRadio"] input:checked + label {
         #             background-color: #FF0000 !important; /* selected color */
         #             color: white !important;
-        #             border-color: #ec1c24 !important;
+        #             border-color: #ff5000 !important;
         #         }
 
         #         /* Hide default radio circle */
@@ -2904,7 +2895,7 @@ elif st.session_state.page == 13:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p>Таны бодлоор компанидаа ажил, мэргэжлийн хувьд <span style="color: #ec1c24;">өсөж, хөгжих</span> боломж хангалттай байсан уу?</p>
+                    <p>Таны бодлоор компанидаа ажил, мэргэжлийн хувьд <span style="color: #ff5000;">өсөж, хөгжих</span> боломж хангалттай байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2957,14 +2948,14 @@ elif st.session_state.page == 13:
 
         #         /* Hover effect */
         #         div[data-testid="stRadio"] label:hover {
-        #             border-color: #ec1c24;
+        #             border-color: #ff5000;
         #         }
 
         #         /* Checked/selected option */
         #         div[data-testid="stRadio"] input:checked + label {
         #             background-color: #FF0000 !important; /* selected color */
         #             color: white !important;
-        #             border-color: #ec1c24 !important;
+        #             border-color: #ff5000 !important;
         #         }
 
         #         /* Hide default radio circle */
@@ -3160,7 +3151,7 @@ elif st.session_state.page == 14:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p>Компаниас зохион байгуулдаг <span style="color: #ec1c24;"> сургалтууд </span> чанартай үр дүнтэй байж таныг ажил мэргэжлийн ур чадвараа нэмэгдүүлэхэд дэмжлэг үзүүлж чадсан уу?</p>
+                    <p>Компаниас зохион байгуулдаг <span style="color: #ff5000;"> сургалтууд </span> чанартай үр дүнтэй байж таныг ажил мэргэжлийн ур чадвараа нэмэгдүүлэхэд дэмжлэг үзүүлж чадсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -3213,14 +3204,14 @@ elif st.session_state.page == 14:
 
         #         /* Hover effect */
         #         div[data-testid="stRadio"] label:hover {
-        #             border-color: #ec1c24;
+        #             border-color: #ff5000;
         #         }
 
         #         /* Checked/selected option */
         #         div[data-testid="stRadio"] input:checked + label {
         #             background-color: #FF0000 !important; /* selected color */
         #             color: white !important;
-        #             border-color: #ec1c24 !important;
+        #             border-color: #ff5000 !important;
         #         }
 
         #         /* Hide default radio circle */
@@ -3413,7 +3404,7 @@ elif st.session_state.page == 15:
 
         st.markdown("""
             <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3;">
-                    <p> Та ойрын хүрээлэлдээ "<span style="color: #ec1c24;">Дижитал Концепт</span>" -т ажилд орохыг санал болгох уу? </p>
+                    <p> Та ойрын хүрээлэлдээ "<span style="color: #ff5000;">Дижитал Концепт</span>" -т ажилд орохыг санал болгох уу? </p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
