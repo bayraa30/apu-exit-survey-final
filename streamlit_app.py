@@ -766,14 +766,16 @@ def interview_table_page():
             q = f"""
             WITH survey AS (
                 SELECT
-                    EMPCODE    AS EMPCODE,
+                    EMPCODE,
                     SUBMITTED_AT
                 FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviewed AS (
-                SELECT DISTINCT EMPCODE
+                SELECT DISTINCT
+                    EMP_CODE
                 FROM {db}.{schema}.{interview_tbl}
+                WHERE EMP_CODE IS NOT NULL
             )
             SELECT
                 s.EMPCODE,
@@ -785,16 +787,15 @@ def interview_table_page():
                 e.POSNAME
             FROM survey s
             LEFT JOIN interviewed i
-                ON i.EMPCODE = s.EMPCODE
+                ON i.EMP_CODE = s.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = s.EMPCODE
-            WHERE i.EMPCODE IS NULL
+            WHERE i.EMP_CODE IS NULL
             ORDER BY s.SUBMITTED_AT DESC
             """
 
             df = session.sql(q).to_pandas()
 
-            # SUBMITTED_AT → date only
             if "SUBMITTED_AT" in df.columns:
                 df["SUBMITTED_AT"] = pd.to_datetime(df["SUBMITTED_AT"]).dt.date
 
@@ -815,17 +816,13 @@ def interview_table_page():
                     st.rerun()
                 return
 
-            # base columns
             base_cols = [
                 "Ажилтны код", "Овог", "Нэр",
                 "Компани", "Хэлтэс", "Албан тушаал", "Бөглөсөн огноо"
             ]
             df_display = df[base_cols].copy()
-
-            # add selection column
             df_display["Сонгох"] = False
 
-            # 👉 reorder so Сонгох + Бөглөсөн огноо are in front
             ordered_cols = [
                 "Сонгох",
                 "Бөглөсөн огноо",
@@ -849,23 +846,24 @@ def interview_table_page():
             st.error(f"❌ Snowflake холболтын алдаа: {e}")
             return
 
-        if st.button("Үргэлжлүүлэх → Ярилцлагын танилцуулга"):
-            selected = edited[edited["Сонгох"] == True]
+    if st.button("Үргэлжлүүлэх → Ярилцлагын танилцуулга"):
+        selected = edited[edited["Сонгох"] == True]
 
-            if selected.empty:
-                st.warning("Та ярилцлага хийх нэг ажилтныг сонгоно уу.")
-                return
-            if len(selected) > 1:
-                st.warning("Нэг ажилтан сонгоно уу.")
-                return
+        if selected.empty:
+            st.warning("Та ярилцлага хийх нэг ажилтныг сонгоно уу.")
+            return
+        if len(selected) > 1:
+            st.warning("Нэг ажилтан сонгоно уу.")
+            return
 
-            row = selected.iloc[0]
-            st.session_state.selected_EMPCODE = row["Ажилтны код"]
-            st.session_state.selected_emp_lastname = row["Овог"]
-            st.session_state.selected_emp_firstname = row["Нэр"]
+        row = selected.iloc[0]
+        st.session_state.selected_EMPCODE = row["Ажилтны код"]
+        st.session_state.selected_emp_lastname = row["Овог"]
+        st.session_state.selected_emp_firstname = row["Нэр"]
 
-            st.session_state.page = "interview_0"
-            st.rerun()
+        st.session_state.page = "interview_0"
+        st.rerun()
+
 # ---- DIRECTORY PAGE ----
 def directory_page():
 
