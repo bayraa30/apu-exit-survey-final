@@ -690,7 +690,6 @@ def table_view_page():
             schema = SCHEMA_NAME
             db = DATABASE_NAME
 
-            # Join survey answers with employee master and check interview status
             q = f"""
             WITH answers AS (
                 SELECT
@@ -701,15 +700,15 @@ def table_view_page():
             ),
             interviews AS (
                 SELECT DISTINCT
-                    EMPCODE
+                    EMP_CODE
                 FROM {db}.{schema}.{INTERVIEW_TABLE}
             )
             SELECT
                 a.EMPCODE                         AS EMPCODE,
                 a.SUBMITTED_AT                    AS SUBMITTED_AT,
-                '✅'                               AS SURVEY_DONE,         -- always yes, from survey table
-                CASE 
-                    WHEN i.EMPCODE IS NOT NULL THEN '✅'
+                '✅'                               AS SURVEY_DONE,
+                CASE
+                    WHEN i.EMP_CODE IS NOT NULL THEN '✅'
                     ELSE '❌'
                 END                                AS INTERVIEW_DONE,
                 e.LASTNAME,
@@ -719,14 +718,14 @@ def table_view_page():
                 e.POSNAME
             FROM answers a
             LEFT JOIN interviews i
-                ON i.EMPCODE = a.EMPCODE
+                ON i.EMP_CODE = a.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = a.EMPCODE
             ORDER BY a.SUBMITTED_AT DESC
             """
+
             df = session.sql(q).to_pandas()
 
-            # Rename columns to Mongolian labels
             df.rename(columns={
                 "EMPCODE": "Ажилтны код",
                 "SUBMITTED_AT": "Бөглөсөн огноо",
@@ -740,19 +739,17 @@ def table_view_page():
             }, inplace=True)
 
             if not df.empty:
-                # ⏱ Only show date part for submitted_at
                 df["Бөглөсөн огноо"] = pd.to_datetime(df["Бөглөсөн огноо"]).dt.date
 
-            # Show table
             st.dataframe(df, width="stretch")
 
         except Exception as e:
             st.error(f"❌ Snowflake холболтын алдаа: {e}")
 
-        # Continue to directory
         if st.button("Үргэлжлүүлэх → Судалгааны сонголт"):
             st.session_state.page = -0.5
             st.rerun()
+
 
 
 def interview_table_page():
@@ -769,14 +766,16 @@ def interview_table_page():
             q = f"""
             WITH survey AS (
                 SELECT
-                    EMPCODE    AS EMPCODE,
+                    EMPCODE,
                     SUBMITTED_AT
                 FROM {db}.{schema}.SKYTEL_SURVEY_ANSWERS
                 WHERE SUBMITTED_AT IS NOT NULL
             ),
             interviewed AS (
-                SELECT DISTINCT EMPCODE
+                SELECT DISTINCT
+                    EMP_CODE
                 FROM {db}.{schema}.{interview_tbl}
+                WHERE EMP_CODE IS NOT NULL
             )
             SELECT
                 s.EMPCODE,
@@ -788,16 +787,15 @@ def interview_table_page():
                 e.POSNAME
             FROM survey s
             LEFT JOIN interviewed i
-                ON i.EMPCODE = s.EMPCODE
+                ON i.EMP_CODE = s.EMPCODE
             LEFT JOIN {db}.{schema}.SKYTEL_EMP_DATA_FINAL e
                 ON e.EMPCODE = s.EMPCODE
-            WHERE i.EMPCODE IS NULL
+            WHERE i.EMP_CODE IS NULL
             ORDER BY s.SUBMITTED_AT DESC
             """
 
             df = session.sql(q).to_pandas()
 
-            # SUBMITTED_AT → date only
             if "SUBMITTED_AT" in df.columns:
                 df["SUBMITTED_AT"] = pd.to_datetime(df["SUBMITTED_AT"]).dt.date
 
@@ -818,17 +816,13 @@ def interview_table_page():
                     st.rerun()
                 return
 
-            # base columns
             base_cols = [
                 "Ажилтны код", "Овог", "Нэр",
                 "Компани", "Хэлтэс", "Албан тушаал", "Бөглөсөн огноо"
             ]
             df_display = df[base_cols].copy()
-
-            # add selection column
             df_display["Сонгох"] = False
 
-            # 👉 reorder so Сонгох + Бөглөсөн огноо are in front
             ordered_cols = [
                 "Сонгох",
                 "Бөглөсөн огноо",
@@ -852,23 +846,24 @@ def interview_table_page():
             st.error(f"❌ Snowflake холболтын алдаа: {e}")
             return
 
-        if st.button("Үргэлжлүүлэх → Ярилцлагын танилцуулга"):
-            selected = edited[edited["Сонгох"] == True]
+    if st.button("Үргэлжлүүлэх → Ярилцлагын танилцуулга"):
+        selected = edited[edited["Сонгох"] == True]
 
-            if selected.empty:
-                st.warning("Та ярилцлага хийх нэг ажилтныг сонгоно уу.")
-                return
-            if len(selected) > 1:
-                st.warning("Нэг ажилтан сонгоно уу.")
-                return
+        if selected.empty:
+            st.warning("Та ярилцлага хийх нэг ажилтныг сонгоно уу.")
+            return
+        if len(selected) > 1:
+            st.warning("Нэг ажилтан сонгоно уу.")
+            return
 
-            row = selected.iloc[0]
-            st.session_state.selected_EMPCODE = row["Ажилтны код"]
-            st.session_state.selected_emp_lastname = row["Овог"]
-            st.session_state.selected_emp_firstname = row["Нэр"]
+        row = selected.iloc[0]
+        st.session_state.selected_EMPCODE = row["Ажилтны код"]
+        st.session_state.selected_emp_lastname = row["Овог"]
+        st.session_state.selected_emp_firstname = row["Нэр"]
 
-            st.session_state.page = "interview_0"
-            st.rerun()
+        st.session_state.page = "interview_0"
+        st.rerun()
+
 # ---- DIRECTORY PAGE ----
 def directory_page():
 
@@ -1095,8 +1090,8 @@ def submit_interview_answers():
         schema = SCHEMA_NAME
         table = INTERVIEW_TABLE
 
-        emp_code = st.session_state.get("selected_emp_code")
-        if not emp_code:
+        EMPCODE = st.session_state.get("selected_EMPCODE")
+        if not EMPCODE:
             st.error("Ажилтны код олдсонгүй. Хүснэгтээс ажилтан сонгосон эсэхээ шалгана уу.")
             return False
 
@@ -1130,7 +1125,7 @@ def submit_interview_answers():
 
         insert_sql = f"""
             INSERT INTO {db}.{schema}.{table} (
-                EMP_CODE,
+                EMPCODE,
                 SUBMITTED_AT,
                 Q1_SCORE, Q1_DETAIL,
                 Q2_SCORE, Q2_DETAIL,
@@ -1141,7 +1136,7 @@ def submit_interview_answers():
                 Q7_FACTORS
             )
             VALUES (
-                {_sql_str(emp_code)},
+                {_sql_str(EMPCODE)},
                 {_sql_str(submitted_at)},
                 {_sql_str(q1_score)},  {_sql_str(q1_detail)},
                 {_sql_str(q2_score)},  {_sql_str(q2_detail)},
