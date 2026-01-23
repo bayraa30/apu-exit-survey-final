@@ -514,7 +514,7 @@ def init_from_link_token():
 
     # Get query params (works on Streamlit Cloud)
     params = st.query_params
-
+    print(params, ' params')
     mode = params.get("mode", None)
     token = params.get("token", None)
 
@@ -873,8 +873,8 @@ def directory_page():
     with col1:
 
         st.markdown("""
-            <h1 style="text-align: left; margin-left: 0; font-size: 3em; height:60vh; display:table; ">
-                    <p style="display:table-cell; vertical-align: middle;">Ажилтны ерөнхий <span style="color: #ff5000;"> мэдээлэл </span> </p>
+            <h1 style="text-align: left; margin-left: 0; font-size: 3em; display:flex; height:50vh;align-items: center;">
+                    <p>Ажилтны ерөнхий <span style="color: #ff5000;"> мэдээлэл </span> </p>
             </h1>
         """, unsafe_allow_html=True)
 
@@ -910,6 +910,8 @@ def directory_page():
                     border: 1px solid #ccc;
                     transition: all 0.2s ease-in-out;
                     text-align: center;
+                    align-items:center;
+                    height: 9vh;
                 }
                         
                 label[data-testid="stWidgetLabel"]{
@@ -1037,7 +1039,49 @@ def show_survey_answers_page(empcode: str):
         st.error(f"❌ Судалгааны хариу унших үед алдаа гарлаа: {e}")
 # ---Thankyou
 def final_thank_you():
-    header()
+    col1, col2 = st.columns(2)
+
+    st.markdown("""
+    <style>
+            div[data-testid="stHorizontalBlock"] {
+                display:flex;
+                flex-direction: row;
+                align-items: center;
+            }
+    </style>
+""", unsafe_allow_html=True)
+    with col1:
+        st.image(LOGO_URL, width=210)
+    with col2:
+        if("EMPCODE" in st.session_state and st.session_state.EMPCODE):
+            st.markdown("""
+                <style>
+                .btn-like {
+                    justify-self: end;
+                    padding: 12px 20px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    font-size: 1.2em;
+                }
+                    </style>""", unsafe_allow_html=True)
+                
+
+        st.markdown(f"""
+                        <div class="btn-like">{st.session_state.EMPCODE}</div>
+                        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+                div[data-testid="stVerticalBlock"]:has(h1)   {
+                            justify-content:center;
+                            align-items: center;
+                }
+
+            </style>
+            """
+                , unsafe_allow_html=True  
+        )
 
     st.markdown(
         """
@@ -2174,14 +2218,14 @@ elif st.session_state.page == 9:
        
         # --- OPTIONS ---
         options = [ "Цалин",
-                    "баг хамт олны дэмжлэг",
-                    "сурч хөгжих боломжоор хангагддаг байсан нь",
-                    "олон нийтийн үйл ажиллагаа",
-                    "шударга нээлттэй харилцаа",
-                    "шагнал урамшуулал",
-                    "ажлын орчин",
-                    "төсөл",
-                    "хөтөлбөрүүд",
+                    "Баг хамт олны дэмжлэг",
+                    "Сурч хөгжих боломжоор хангагддаг байсан нь",
+                    "Олон нийтийн үйл ажиллагаа",
+                    "Шударга нээлттэй харилцаа",
+                    "Шагнал урамшуулал",
+                    "Ажлын орчин",
+                    "Төсөл",
+                    "Хөтөлбөрүүд",
                 ]
 
         # --- Session state for selected answers ---
@@ -2359,8 +2403,8 @@ elif st.session_state.page == 11:
     with col1:
 
         st.markdown("""
-            <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3; display: table; height: 55vh;">
-                    <p style="display:table-cell; vertical-align: middle;"> Танд компаниас олгосон тэтгэмж, хөнгөлөлтүүд (эрүүл мэндийн даатгал, цалинтай чөлөө, тэтгэмж гэх мэт) нь үнэ цэнтэй, ач холбогдолтой байсан уу?</p>
+            <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3; display:flex; height:50vh;align-items: center;">
+                    <p> Танд компаниас олгосон тэтгэмж, хөнгөлөлтүүд (эрүүл мэндийн даатгал, цалинтай чөлөө, тэтгэмж гэх мэт) нь үнэ цэнтэй, ач холбогдолтой байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2626,8 +2670,8 @@ elif st.session_state.page == 12:
 
         st.markdown("""
                     
-            <h1 style="text-align: left; margin-left: 0; font-size: clamp(1rem, 1.5rem, 2rem); height: 55vh; display:table; ">
-                <p style="display:table-cell; vertical-align: middle;">Таны ажлын гүйцэтгэлийг (<span style="color: #ec1c24;">KPI, LTI</span>) үнэн зөв, шударга үнэлэн дүгнэдэг байсан уу?</p>
+            <h1 style="text-align: left; margin-left: 0; font-size: clamp(1rem, 1.5rem, 2rem);display:flex; height:50vh;align-items: center; ">
+                <p>Таны ажлын гүйцэтгэлийг (<span style="color: #ec1c24;">KPI, LTI</span>) үнэн зөв, шударга үнэлэн дүгнэдэг байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
@@ -2759,8 +2803,8 @@ elif st.session_state.page == 13:
     with col1:
 
         st.markdown("""
-            <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3; height: 55vh; display:table; ">
-                <p style="display:table-cell; vertical-align: middle;">Таны бодлоор компанидаа ажил, мэргэжлийн хувьд <span style="color: #ec1c24;">өсөж, хөгжих</span> боломж хангалттай байсан уу?</p>
+            <h1 style="font-size: clamp(1rem, 1.5rem, 2rem); line-height: 1.3; display:flex; height:50vh; align-items: center;">
+                <p>Таны бодлоор компанидаа ажил, мэргэжлийн хувьд <span style="color: #ec1c24;">өсөж, хөгжих</span> боломж хангалттай байсан уу?</p>
             </h1>
         """, unsafe_allow_html=True)
     with col2:
