@@ -556,7 +556,7 @@ def init_from_link_token():
 
         # 2) Load employee info from EMP table
         emp_df = session.sql(f"""
-            SELECT EMPCODE, LASTNAME, FIRSTNAME, COMPANYNAME, HEADDEPNAME, POSNAME
+            SELECT EMPCODE, LASTNAME, FIRSTNAME, COMPANYNAME, DEPNAME, POSNAME
             FROM {DATABASE_NAME}.{SCHEMA_NAME}.{EMPLOYEE_TABLE}
             WHERE EMPCODE = '{empcode}'
             LIMIT 1
@@ -575,7 +575,7 @@ def init_from_link_token():
         st.session_state.confirmed_firstname = row["FIRSTNAME"]
         st.session_state.emp_info = {
             "Компани": row["COMPANYNAME"],
-            "Алба хэлтэс": row["HEADDEPNAME"],
+            "Алба хэлтэс": row["DEPNAME"],
             "Албан тушаал": row["POSNAME"],
             "Овог": row["LASTNAME"],
             "Нэр": row["FIRSTNAME"],
